@@ -1,0 +1,3578 @@
+{
+  "info": {
+    "_postman_id": "90b2a270-c0e9-4bd5-907c-bb6df6afe7cd",
+    "name": "mBank PSD2 API PIS/AIS/CAF/AS",
+    "description": "Collection of basic PIS, AIS and CAF requests for mBank PSD2 API.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "PIS",
+      "item": [
+        {
+          "name": "Immediate transfer",
+          "item": [
+            {
+              "name": "[DOMESTIC] Retrieve authorization URI",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "id": "ac3386be-eec0-4fb4-a74b-da3781d51c84",
+                    "exec": [
+                      "var jsonData = JSON.parse(responseBody);",
+                      "postman.setGlobalVariable(\"authorizationRedirectUri\", jsonData.authorizationRedirectUri);"
+                    ],
+                    "type": "text/javascript"
+                  }
+                },
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "id": "10ba3023-37f2-43ef-acd6-dcd4c56dfb72",
+                    "exec": [
+                      "var now = require('moment');",
+                      "var uuid = require('uuid');",
+                      "",
+                      "pm.globals.set(\"executionDate\", now().format(\"YYYY-MM-DD\"));",
+                      "var nextDay = (Date.now() + 86400000);",
+                      "pm.globals.set(\"scopeTimeLimit\", new Date(nextDay).toISOString());",
+                      "pm.globals.set(\"tppConsentId\", uuid.v4());",
+                      "pm.globals.set(\"state\", require('uuid').v4());",
+                      "eval(pm.variables.get(\"jwsInternalScript\"));",
+                      "calculateDetachedJwsSignature(pm.environment.get(\"tppJwsPrivateKey\"), pm.environment.get(\"tppJwsCertUrl\"), pm.environment.get(\"tppJwsCertFingerprint\"), request);"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json; charset=utf-8"
+                  },
+                  {
+                    "key": "Accept-Encoding",
+                    "value": "Gzip, deflate"
+                  },
+                  {
+                    "key": "Accept-Language",
+                    "value": "en"
+                  },
+                  {
+                    "key": "JWS-Signature",
+                    "value": "{{jwsSignature}}"
+                  },
+                  {
+                    "key": "TPP-Request-ID",
+                    "value": "{{tppRequestId}}"
+                  },
+                  {
+                    "key": "PSU-User-Agent",
+                    "value": "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:47.0) Gecko/20100101 Firefox/47.0 Mozilla/5.0 (Macintosh; Intel Mac OS X x.y; rv:42.0) Gecko/20100101 Firefox/42.0."
+                  },
+                  {
+                    "key": "PSU-IP-Address",
+                    "value": "193.41.230.87"
+                  },
+                  {
+                    "key": "PSU-IP-Port",
+                    "value": "23456"
+                  },
+                  {
+                    "key": "TPP-ID",
+                    "value": "{{tppId}}",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"response_type\": \"code\",\n    \"client_id\": \"{{clientId}}\",\n    \"redirect_uri\": \"https://tpp-redirect-uri.com\",\n    \"scope\": \"pis\",\n    \"state\": \"{{state}}\",\n    \"scope_details\": {\n        \"privilegeList\": [\n            {\n                \"pis:domestic\": {\n                    \"domesticPaymentRequest\": {\n                        \"recipient\": {\n                            \"accountNumber\": \"{{recipientAccountNumber}}\",\n                            \"name\": \"Jan Kowalski\"\n                        },\n                        \"sender\": {},\n                        \"transferData\": {\n                            \"description\": \"Transfer\",\n                            \"amount\": \"0.01\",\n                            \"currency\": \"{{currency}}\"\n                        },\n                        \"deliveryMode\": \"STANDARD_D1\"\n                    }\n                }\n            }\n        ],\n        \"scopeGroupType\": \"PIS\",\n        \"consentId\": \"{{tppConsentId}}\",\n        \"scopeTimeLimit\": \"{{scopeTimeLimit}}\",\n        \"throttlingPolicy\": \"PSD2_REGULATORY\"\n    }\n}"
+                },
+                "url": {
+                  "raw": "{{xs2aUri}}/{{bankId}}/v2/auth/authorize",
+                  "host": [
+                    "{{xs2aUri}}"
+                  ],
+                  "path": [
+                    "{{bankId}}",
+                    "v2",
+                    "auth",
+                    "authorize"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "[DOMESTIC] Retrieve accessToken for payment inititation",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "id": "d65f8870-e945-4b24-933f-b319ccc9c3c5",
+                    "exec": [
+                      "var jsonData = JSON.parse(responseBody);",
+                      "postman.setGlobalVariable(\"accessToken\", jsonData.access_token);",
+                      "postman.setGlobalVariable(\"refreshToken\", jsonData.refresh_token);"
+                    ],
+                    "type": "text/javascript"
+                  }
+                },
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "id": "a71da95f-0766-49de-ac1a-636dc02d13ac",
+                    "exec": [
+                      "eval(pm.variables.get(\"jwsInternalScript\"));",
+                      "calculateDetachedJwsSignature(pm.environment.get(\"tppJwsPrivateKey\"), pm.environment.get(\"tppJwsCertUrl\"), pm.environment.get(\"tppJwsCertFingerprint\"), request);"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json; charset=utf-8"
+                  },
+                  {
+                    "key": "Accept-Encoding",
+                    "value": "Gzip, deflate"
+                  },
+                  {
+                    "key": "Accept-Language",
+                    "value": "en"
+                  },
+                  {
+                    "key": "JWS-Signature",
+                    "value": "{{jwsSignature}}"
+                  },
+                  {
+                    "key": "TPP-Request-ID",
+                    "value": "{{tppRequestId}}"
+                  },
+                  {
+                    "key": "TPP-ID",
+                    "value": "{{tppId}}",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"client_id\": \"{{clientId}}\",\n    \"code\": \"{{authorizationCode}}\",\n    \"grant_type\": \"authorization_code\",\n    \"redirect_uri\": \"https://tpp-redirect-uri.com\"\n}"
+                },
+                "url": {
+                  "raw": "{{xs2aUri}}/{{bankId}}/v2/auth/token",
+                  "host": [
+                    "{{xs2aUri}}"
+                  ],
+                  "path": [
+                    "{{bankId}}",
+                    "v2",
+                    "auth",
+                    "token"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "[DOMESTIC] Initiate domestic payment",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "id": "c9b534e0-4c8a-4a63-af2f-e631603a4161",
+                    "exec": [
+                      "var jsonData = JSON.parse(responseBody);",
+                      "postman.setGlobalVariable(\"statusUrl\", jsonData.links[0].href);",
+                      "",
+                      "var aspspPaymentIdRegex = \"([a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12})\"",
+                      "var aspspPaymentIdMatches = jsonData.links[0].href.match(aspspPaymentIdRegex)",
+                      "postman.setGlobalVariable(\"aspspPaymentId\", aspspPaymentIdMatches[0]);"
+                    ],
+                    "type": "text/javascript"
+                  }
+                },
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "id": "0f847df0-e26c-4278-9116-a8ac2edb2b31",
+                    "exec": [
+                      "eval(pm.variables.get(\"jwsInternalScript\"));",
+                      "calculateDetachedJwsSignature(pm.environment.get(\"tppJwsPrivateKey\"), pm.environment.get(\"tppJwsCertUrl\"), pm.environment.get(\"tppJwsCertFingerprint\"), request);"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json; charset=utf-8"
+                  },
+                  {
+                    "key": "Client-ID",
+                    "value": "{{clientId}}"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{accessToken}}"
+                  },
+                  {
+                    "key": "Accept-Encoding",
+                    "value": "Gzip, deflate"
+                  },
+                  {
+                    "key": "Accept-Language",
+                    "value": "en"
+                  },
+                  {
+                    "key": "JWS-Signature",
+                    "value": "{{jwsSignature}}"
+                  },
+                  {
+                    "key": "TPP-Payment-ID",
+                    "value": "{{tppRequestId}}"
+                  },
+                  {
+                    "key": "TPP-Request-ID",
+                    "value": "{{tppRequestId}}"
+                  },
+                  {
+                    "key": "TPP-ID",
+                    "value": "{{tppId}}",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"recipient\": {\n        \"accountNumber\": \"{{recipientAccountNumber}}\",\n        \"name\": \"Jan Kowalski\"\n    },\n    \"sender\": {},\n    \"transferData\": {\n        \"description\": \"Transfer\",\n        \"amount\": \"0.01\",\n        \"currency\": \"{{currency}}\"\n    },\n    \"deliveryMode\": \"STANDARD_D1\"\n}"
+                },
+                "url": {
+                  "raw": "{{xs2aUri}}/{{bankId}}/v2/payments/domestic",
+                  "host": [
+                    "{{xs2aUri}}"
+                  ],
+                  "path": [
+                    "{{bankId}}",
+                    "v2",
+                    "payments",
+                    "domestic"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "[DOMESTIC] Retrieve accessToken for payment status",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "id": "e7dbeb86-f745-4f40-826e-e719feb9f880",
+                    "exec": [
+                      "var jsonData = JSON.parse(responseBody);",
+                      "postman.setGlobalVariable(\"accessToken\", jsonData.access_token);",
+                      "postman.setGlobalVariable(\"refreshToken\", jsonData.refresh_token);",
+                      "console.log(jsonData.access_token)"
+                    ],
+                    "type": "text/javascript"
+                  }
+                },
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "id": "ad81a89a-a6e8-456b-a97b-a2e38209c03d",
+                    "exec": [
+                      "eval(pm.variables.get(\"jwsInternalScript\"));",
+                      "calculateDetachedJwsSignature(pm.environment.get(\"tppJwsPrivateKey\"), pm.environment.get(\"tppJwsCertUrl\"), pm.environment.get(\"tppJwsCertFingerprint\"), request);"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json; charset=utf-8"
+                  },
+                  {
+                    "key": "Accept-Encoding",
+                    "value": "Gzip, deflate"
+                  },
+                  {
+                    "key": "Accept-Language",
+                    "value": "en"
+                  },
+                  {
+                    "key": "JWS-Signature",
+                    "value": "{{jwsSignature}}"
+                  },
+                  {
+                    "key": "TPP-Request-ID",
+                    "value": "{{tppRequestId}}"
+                  },
+                  {
+                    "key": "TPP-ID",
+                    "value": "{{tppId}}",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"refresh_token\": \"{{refreshToken}}\",\n    \"grant_type\": \"refresh_token\"\n}"
+                },
+                "url": {
+                  "raw": "{{xs2aUri}}/{{bankId}}/v2/auth/token",
+                  "host": [
+                    "{{xs2aUri}}"
+                  ],
+                  "path": [
+                    "{{bankId}}",
+                    "v2",
+                    "auth",
+                    "token"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "[DOMESTIC] Retrieve payment status",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "id": "f71e9856-358e-4c79-95f7-26b64a3c1a4c",
+                    "exec": [
+                      ""
+                    ],
+                    "type": "text/javascript"
+                  }
+                },
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "id": "68cbb046-aa69-4b9e-9a24-47d53e7dd4b5",
+                    "exec": [
+                      "eval(pm.variables.get(\"jwsInternalScript\"));",
+                      "calculateDetachedJwsSignature(pm.environment.get(\"tppJwsPrivateKey\"), pm.environment.get(\"tppJwsCertUrl\"), pm.environment.get(\"tppJwsCertFingerprint\"), request);"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Client-ID",
+                    "value": "{{clientId}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{accessToken}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json; charset=utf-8",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Accept-Encoding",
+                    "value": "Gzip, deflate",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Accept-Language",
+                    "value": "en",
+                    "type": "text"
+                  },
+                  {
+                    "key": "JWS-Signature",
+                    "value": "{{jwsSignature}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "TPP-Request-ID",
+                    "value": "{{tppRequestId}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "TPP-ID",
+                    "value": "{{tppId}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{xs2aUri}}{{statusUrl}}",
+                  "host": [
+                    "{{xs2aUri}}{{statusUrl}}"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "id": "515ca58a-a288-4361-a67e-29198ed641a0",
+                "type": "text/javascript",
+                "exec": [
+                  ""
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "id": "cda500f2-cadf-4c78-96e2-f429a113ebfb",
+                "type": "text/javascript",
+                "exec": [
+                  ""
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {},
+          "_postman_isSubFolder": true
+        },
+        {
+          "name": "Recurring transfer + cancellation",
+          "item": [
+            {
+              "name": "[DOMESTIC RECURRING] Retrieve authorization URI",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "id": "41ae498d-ca22-45ee-ba04-d4684f4ab59b",
+                    "exec": [
+                      "var jsonData = JSON.parse(responseBody);",
+                      "postman.setGlobalVariable(\"authorizationRedirectUri\", jsonData.authorizationRedirectUri);"
+                    ],
+                    "type": "text/javascript"
+                  }
+                },
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "id": "606032c0-673b-4fae-a521-eb558bb1983d",
+                    "exec": [
+                      "var now = require('moment');",
+                      "var uuid = require('uuid');",
+                      "",
+                      "pm.globals.set(\"executionDate\", now().format(\"YYYY-MM-DD\"));",
+                      "var nextDay = (Date.now() + 86400000);",
+                      "pm.globals.set(\"scopeTimeLimit\", new Date(nextDay).toISOString());",
+                      "pm.globals.set(\"tppConsentId\", uuid.v4());",
+                      "pm.globals.set(\"state\", require('uuid').v4());",
+                      "eval(pm.variables.get(\"jwsInternalScript\"));",
+                      "calculateDetachedJwsSignature(pm.environment.get(\"tppJwsPrivateKey\"), pm.environment.get(\"tppJwsCertUrl\"), pm.environment.get(\"tppJwsCertFingerprint\"), request);"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json; charset=utf-8"
+                  },
+                  {
+                    "key": "Accept-Encoding",
+                    "value": "gzip, deflate"
+                  },
+                  {
+                    "key": "Accept-Language",
+                    "value": "en-US"
+                  },
+                  {
+                    "key": "JWS-Signature",
+                    "value": "{{jwsSignature}}"
+                  },
+                  {
+                    "key": "TPP-Request-ID",
+                    "value": "{{tppRequestId}}"
+                  },
+                  {
+                    "key": "PSU-User-Agent",
+                    "value": "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:47.0) Gecko/20100101 Firefox/47.0 Mozilla/5.0 (Macintosh; Intel Mac OS X x.y; rv:42.0) Gecko/20100101 Firefox/42.0."
+                  },
+                  {
+                    "key": "PSU-IP-Address",
+                    "value": "193.41.230.87"
+                  },
+                  {
+                    "key": "PSU-IP-Port",
+                    "value": "23456"
+                  },
+                  {
+                    "key": "TPP-ID",
+                    "value": "{{tppId}}",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"response_type\": \"code\",\n    \"client_id\": \"{{clientId}}\",\n    \"redirect_uri\": \"https://tpp-redirect-uri.com\",\n    \"scope\": \"pis\",\n    \"state\": \"{{state}}\",\n    \"scope_details\": {\n        \"privilegeList\": [\n            {\n                \"pis:domestic\": {\n                    \"domesticPaymentRequest\": {\n                        \"recipient\": {\n                            \"accountNumber\": \"{{recipientAccountNumber}}\",\n                            \"name\": \"Jan Kowalski\"\n                        },\n                        \"sender\": {},\n                        \"transferData\": {\n                            \"description\": \"Transfer\",\n                            \"amount\": \"0.01\",\n                            \"currency\": \"{{currency}}\",\n                            \"recurrence\": {\n                                \"startDate\": \"2018-07-26\",\n                                \"frequency\": {\n                                    \"periodType\": \"WEEK\",\n                                    \"periodValue\": 1\n                                },\n                                \"endDate\": \"2025-07-26\",\n                                \"dayOffOffsetType\": \"BEFORE\"\n                            }\n                        },\n                        \"deliveryMode\": \"STANDARD_D1\",\n                        \"executionMode\": \"RECURRING\"\n                    }\n                }\n            }\n        ],\n        \"scopeGroupType\": \"PIS\",\n        \"consentId\": \"{{tppConsentId}}\",\n        \"scopeTimeLimit\": \"{{scopeTimeLimit}}\",\n        \"throttlingPolicy\": \"PSD2_REGULATORY\"\n    }\n}"
+                },
+                "url": {
+                  "raw": "{{xs2aUri}}/{{bankId}}/v2/auth/authorize",
+                  "host": [
+                    "{{xs2aUri}}"
+                  ],
+                  "path": [
+                    "{{bankId}}",
+                    "v2",
+                    "auth",
+                    "authorize"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "[DOMESTIC RECURRING] Retrieve accessToken for payment inititation",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "id": "80276d85-e421-4bce-ae0a-44d4bdcd88c6",
+                    "exec": [
+                      "var jsonData = JSON.parse(responseBody);",
+                      "postman.setGlobalVariable(\"accessToken\", jsonData.access_token);",
+                      "postman.setGlobalVariable(\"refreshToken\", jsonData.refresh_token);"
+                    ],
+                    "type": "text/javascript"
+                  }
+                },
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "id": "c631a7f3-ea37-49e7-96a9-52b0fbcacad9",
+                    "exec": [
+                      "eval(pm.variables.get(\"jwsInternalScript\"));",
+                      "calculateDetachedJwsSignature(pm.environment.get(\"tppJwsPrivateKey\"), pm.environment.get(\"tppJwsCertUrl\"), pm.environment.get(\"tppJwsCertFingerprint\"), request);"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json; charset=utf-8"
+                  },
+                  {
+                    "key": "Accept-Encoding",
+                    "value": "Gzip, deflate"
+                  },
+                  {
+                    "key": "Accept-Language",
+                    "value": "en-US"
+                  },
+                  {
+                    "key": "JWS-Signature",
+                    "value": "{{jwsSignature}}"
+                  },
+                  {
+                    "key": "TPP-Request-ID",
+                    "value": "{{tppRequestId}}"
+                  },
+                  {
+                    "key": "TPP-ID",
+                    "value": "{{tppId}}",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"client_id\": \"{{clientId}}\",\n    \"code\": \"{{authorizationCode}}\",\n    \"grant_type\": \"authorization_code\",\n    \"redirect_uri\": \"https://tpp-redirect-uri.com\"\n}"
+                },
+                "url": {
+                  "raw": "{{xs2aUri}}/{{bankId}}/v2/auth/token",
+                  "host": [
+                    "{{xs2aUri}}"
+                  ],
+                  "path": [
+                    "{{bankId}}",
+                    "v2",
+                    "auth",
+                    "token"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "[DOMESTIC RECURRING] Initiate domestic payment",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "id": "b159fa93-2bf8-4c1c-8a89-be2db479f482",
+                    "exec": [
+                      "var jsonData = JSON.parse(responseBody);",
+                      "postman.setGlobalVariable(\"statusUrl\", jsonData.links[0].href);",
+                      "",
+                      "var aspspPaymentIdRegex = \"([a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12})\"",
+                      "var aspspPaymentIdMatches = jsonData.links[0].href.match(aspspPaymentIdRegex)",
+                      "postman.setGlobalVariable(\"aspspPaymentId\", aspspPaymentIdMatches[0]);"
+                    ],
+                    "type": "text/javascript"
+                  }
+                },
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "id": "62f50ab5-dd81-4bff-bb01-fc84ed1014b0",
+                    "exec": [
+                      "eval(pm.variables.get(\"jwsInternalScript\"));",
+                      "calculateDetachedJwsSignature(pm.environment.get(\"tppJwsPrivateKey\"), pm.environment.get(\"tppJwsCertUrl\"), pm.environment.get(\"tppJwsCertFingerprint\"), request);"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json; charset=utf-8"
+                  },
+                  {
+                    "key": "Client-ID",
+                    "value": "{{clientId}}"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{accessToken}}"
+                  },
+                  {
+                    "key": "Accept-Encoding",
+                    "value": "gzip, deflate"
+                  },
+                  {
+                    "key": "Accept-Language",
+                    "value": "en-US"
+                  },
+                  {
+                    "key": "JWS-Signature",
+                    "value": "{{jwsSignature}}"
+                  },
+                  {
+                    "key": "TPP-Payment-ID",
+                    "value": "test-15-{{tppRequestId}}"
+                  },
+                  {
+                    "key": "TPP-Request-ID",
+                    "value": "{{tppRequestId}}"
+                  },
+                  {
+                    "key": "TPP-ID",
+                    "value": "{{tppId}}",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"recipient\": {\n        \"accountNumber\": \"{{recipientAccountNumber}}\",\n        \"name\": \"Jan Kowalski\"\n    },\n    \"sender\": {},\n    \"transferData\": {\n        \"description\": \"Transfer\",\n        \"amount\": \"0.01\",\n        \"currency\": \"{{currency}}\",\n        \"recurrence\": {\n            \"startDate\": \"2018-07-26\",\n            \"frequency\": {\n                \"periodType\": \"WEEK\",\n                \"periodValue\": 1\n            },\n            \"endDate\": \"2025-07-26\",\n            \"dayOffOffsetType\": \"BEFORE\"\n        }\n    },\n    \"deliveryMode\": \"STANDARD_D1\",\n    \"executionMode\": \"RECURRING\"\n}"
+                },
+                "url": {
+                  "raw": "{{xs2aUri}}/{{bankId}}/v2/payments/domestic",
+                  "host": [
+                    "{{xs2aUri}}"
+                  ],
+                  "path": [
+                    "{{bankId}}",
+                    "v2",
+                    "payments",
+                    "domestic"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "[DOMESTIC RECURRING] Retrieve accessToken for payment status",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "id": "1e4b4833-e70d-4aa9-8b63-25f08ff20c8a",
+                    "exec": [
+                      "var jsonData = JSON.parse(responseBody);",
+                      "postman.setGlobalVariable(\"accessToken\", jsonData.access_token);",
+                      "postman.setGlobalVariable(\"refreshToken\", jsonData.refresh_token);",
+                      "console.log(jsonData.access_token)"
+                    ],
+                    "type": "text/javascript"
+                  }
+                },
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "id": "30696129-ee0b-491d-9e8c-21c9ebae6e97",
+                    "exec": [
+                      "eval(pm.variables.get(\"jwsInternalScript\"));",
+                      "calculateDetachedJwsSignature(pm.environment.get(\"tppJwsPrivateKey\"), pm.environment.get(\"tppJwsCertUrl\"), pm.environment.get(\"tppJwsCertFingerprint\"), request);"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json; charset=utf-8"
+                  },
+                  {
+                    "key": "Accept-Encoding",
+                    "value": "gzip, deflate"
+                  },
+                  {
+                    "key": "Accept-Language",
+                    "value": "en-US"
+                  },
+                  {
+                    "key": "JWS-Signature",
+                    "value": "{{jwsSignature}}"
+                  },
+                  {
+                    "key": "TPP-Request-ID",
+                    "value": "{{tppRequestId}}"
+                  },
+                  {
+                    "key": "TPP-ID",
+                    "value": "{{tppId}}",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"refresh_token\": \"{{refreshToken}}\",\n    \"grant_type\": \"refresh_token\"\n}"
+                },
+                "url": {
+                  "raw": "{{xs2aUri}}/{{bankId}}/v2/auth/token",
+                  "host": [
+                    "{{xs2aUri}}"
+                  ],
+                  "path": [
+                    "{{bankId}}",
+                    "v2",
+                    "auth",
+                    "token"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "[DOMESTIC RECURRING] Retrieve payment status",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "id": "0e65e082-703b-45e9-89ac-2414e20d3eba",
+                    "exec": [
+                      ""
+                    ],
+                    "type": "text/javascript"
+                  }
+                },
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "id": "a1bb6b78-0400-4f8f-bda0-5db89b98c1ee",
+                    "exec": [
+                      "eval(pm.variables.get(\"jwsInternalScript\"));",
+                      "calculateDetachedJwsSignature(pm.environment.get(\"tppJwsPrivateKey\"), pm.environment.get(\"tppJwsCertUrl\"), pm.environment.get(\"tppJwsCertFingerprint\"), request);"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Client-ID",
+                    "value": "{{clientId}}"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{accessToken}}"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json; charset=utf-8"
+                  },
+                  {
+                    "key": "Accept-Encoding",
+                    "value": "Gzip, deflate"
+                  },
+                  {
+                    "key": "Accept-Language",
+                    "value": "en"
+                  },
+                  {
+                    "key": "JWS-Signature",
+                    "value": "{{jwsSignature}}"
+                  },
+                  {
+                    "key": "TPP-Request-ID",
+                    "value": "{{tppRequestId}}"
+                  },
+                  {
+                    "key": "TPP-ID",
+                    "value": "{{tppId}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{xs2aUri}}{{statusUrl}}",
+                  "host": [
+                    "{{xs2aUri}}{{statusUrl}}"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "[CANCELLATION] Retrieve authorization URI for payment cancellation",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "id": "a676781b-8cc4-46e7-a3e3-9d063ea06406",
+                    "exec": [
+                      "var jsonData = JSON.parse(responseBody);",
+                      "postman.setGlobalVariable(\"authorizationRedirectUri\", jsonData.authorizationRedirectUri);"
+                    ],
+                    "type": "text/javascript"
+                  }
+                },
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "id": "f5c0bb9f-4b61-4f4b-927c-86100948a398",
+                    "exec": [
+                      "var now = require('moment');",
+                      "var uuid = require('uuid');",
+                      "",
+                      "pm.globals.set(\"executionDate\", now().format(\"YYYY-MM-DD\"));",
+                      "var nextDay = (Date.now() + 86400000);",
+                      "pm.globals.set(\"scopeTimeLimit\", new Date(nextDay).toISOString());",
+                      "pm.globals.set(\"tppConsentIdForCancellation\", uuid.v4());",
+                      "pm.globals.set(\"state\", require('uuid').v4());",
+                      "eval(pm.variables.get(\"jwsInternalScript\"));",
+                      "calculateDetachedJwsSignature(pm.environment.get(\"tppJwsPrivateKey\"), pm.environment.get(\"tppJwsCertUrl\"), pm.environment.get(\"tppJwsCertFingerprint\"), request);"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json; charset=utf-8"
+                  },
+                  {
+                    "key": "Accept-Encoding",
+                    "value": "gzip, deflate"
+                  },
+                  {
+                    "key": "Accept-Language",
+                    "value": "en-US"
+                  },
+                  {
+                    "key": "JWS-Signature",
+                    "value": "{{jwsSignature}}"
+                  },
+                  {
+                    "key": "TPP-Request-ID",
+                    "value": "{{tppRequestId}}"
+                  },
+                  {
+                    "key": "PSU-User-Agent",
+                    "value": "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:47.0) Gecko/20100101 Firefox/47.0 Mozilla/5.0 (Macintosh; Intel Mac OS X x.y; rv:42.0) Gecko/20100101 Firefox/42.0."
+                  },
+                  {
+                    "key": "PSU-IP-Address",
+                    "value": "193.41.230.87"
+                  },
+                  {
+                    "key": "PSU-IP-Port",
+                    "value": "23456"
+                  },
+                  {
+                    "key": "TPP-ID",
+                    "value": "{{tppId}}",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"response_type\": \"code\",\n    \"client_id\": \"{{clientId}}\",\n    \"redirect_uri\": \"https://tpp-redirect-uri.com\",\n    \"scope\": \"pis\",\n    \"state\": \"{{state}}\",\n    \"scope_details\": {\n        \"privilegeList\": [\n            {\n                \"pis:cancelPayment\": {\n                    \"aspspPaymentId\": \"{{aspspPaymentId}}\"\n                }\n            }\n        ],\n        \"scopeGroupType\": \"PIS\",\n        \"consentId\": \"{{tppConsentIdForCancellation}}\",\n        \"scopeTimeLimit\": \"{{scopeTimeLimit}}\",\n        \"throttlingPolicy\": \"PSD2_REGULATORY\"\n    }\n}"
+                },
+                "url": {
+                  "raw": "{{xs2aUri}}/{{bankId}}/v2/auth/authorize",
+                  "host": [
+                    "{{xs2aUri}}"
+                  ],
+                  "path": [
+                    "{{bankId}}",
+                    "v2",
+                    "auth",
+                    "authorize"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "[CANCELLATION] Retrieve accessToken for payment cancellation",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "id": "5944b099-e738-4135-bc52-5478824cb877",
+                    "exec": [
+                      "var jsonData = JSON.parse(responseBody);",
+                      "postman.setGlobalVariable(\"accessTokenForCancellation\", jsonData.access_token);",
+                      "postman.setGlobalVariable(\"refreshTokenForCancellation\", jsonData.refresh_token);"
+                    ],
+                    "type": "text/javascript"
+                  }
+                },
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "id": "3aa4aa6e-f211-489a-8b2b-744f084d1bfd",
+                    "exec": [
+                      "eval(pm.variables.get(\"jwsInternalScript\"));",
+                      "calculateDetachedJwsSignature(pm.environment.get(\"tppJwsPrivateKey\"), pm.environment.get(\"tppJwsCertUrl\"), pm.environment.get(\"tppJwsCertFingerprint\"), request);"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json; charset=utf-8"
+                  },
+                  {
+                    "key": "Accept-Encoding",
+                    "value": "gzip, deflate"
+                  },
+                  {
+                    "key": "Accept-Language",
+                    "value": "en-US"
+                  },
+                  {
+                    "key": "JWS-Signature",
+                    "value": "{{jwsSignature}}"
+                  },
+                  {
+                    "key": "TPP-Request-ID",
+                    "value": "{{tppRequestId}}"
+                  },
+                  {
+                    "key": "TPP-ID",
+                    "value": "{{tppId}}",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"client_id\": \"{{clientId}}\",\n    \"code\": \"{{authorizationCode}}\",\n    \"grant_type\": \"authorization_code\",\n    \"redirect_uri\": \"https://tpp-redirect-uri.com\"\n}"
+                },
+                "url": {
+                  "raw": "{{xs2aUri}}/{{bankId}}/v2/auth/token",
+                  "host": [
+                    "{{xs2aUri}}"
+                  ],
+                  "path": [
+                    "{{bankId}}",
+                    "v2",
+                    "auth",
+                    "token"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "[CANCELLATION] Cancel payment",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "id": "5c10ec84-4fcd-415d-ae8b-b36838cdbf1d",
+                    "exec": [
+                      "var jsonData = JSON.parse(responseBody);",
+                      "postman.setGlobalVariable(\"statusUrl\", jsonData.links[0].href);"
+                    ],
+                    "type": "text/javascript"
+                  }
+                },
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "id": "bd523654-a14c-4fae-9444-0a32cf59ed95",
+                    "exec": [
+                      "eval(pm.variables.get(\"jwsInternalScript\"));",
+                      "calculateDetachedJwsSignature(pm.environment.get(\"tppJwsPrivateKey\"), pm.environment.get(\"tppJwsCertUrl\"), pm.environment.get(\"tppJwsCertFingerprint\"), request);"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json; charset=utf-8"
+                  },
+                  {
+                    "key": "Client-ID",
+                    "value": "{{clientId}}"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{accessTokenForCancellation}}"
+                  },
+                  {
+                    "key": "Accept-Encoding",
+                    "value": "gzip, deflate"
+                  },
+                  {
+                    "key": "Accept-Language",
+                    "value": "en-US"
+                  },
+                  {
+                    "key": "JWS-Signature",
+                    "value": "{{jwsSignature}}"
+                  },
+                  {
+                    "key": "TPP-Payment-ID",
+                    "value": "test-15-{{tppRequestId}}"
+                  },
+                  {
+                    "key": "TPP-Request-ID",
+                    "value": "{{tppRequestId}}"
+                  },
+                  {
+                    "key": "TPP-ID",
+                    "value": "{{tppId}}",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": ""
+                },
+                "url": {
+                  "raw": "{{xs2aUri}}/{{bankId}}/v2/payments/domestic/{{aspspPaymentId}}",
+                  "host": [
+                    "{{xs2aUri}}"
+                  ],
+                  "path": [
+                    "{{bankId}}",
+                    "v2",
+                    "payments",
+                    "domestic",
+                    "{{aspspPaymentId}}"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "[DOMESTIC RECURRING] Retrieve payment status",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "id": "73b5274f-670d-49eb-b98b-5ff21940e9f0",
+                    "exec": [
+                      ""
+                    ],
+                    "type": "text/javascript"
+                  }
+                },
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "id": "be17a6d2-3cb6-48b1-8e63-0613d8fad07f",
+                    "exec": [
+                      "eval(pm.variables.get(\"jwsInternalScript\"));",
+                      "calculateDetachedJwsSignature(pm.environment.get(\"tppJwsPrivateKey\"), pm.environment.get(\"tppJwsCertUrl\"), pm.environment.get(\"tppJwsCertFingerprint\"), request);"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Client-ID",
+                    "value": "{{clientId}}"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{accessToken}}"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json; charset=utf-8"
+                  },
+                  {
+                    "key": "Accept-Encoding",
+                    "value": "Gzip, deflate"
+                  },
+                  {
+                    "key": "Accept-Language",
+                    "value": "en"
+                  },
+                  {
+                    "key": "JWS-Signature",
+                    "value": "{{jwsSignature}}"
+                  },
+                  {
+                    "key": "TPP-Request-ID",
+                    "value": "{{tppRequestId}}"
+                  },
+                  {
+                    "key": "TPP-ID",
+                    "value": "{{tppId}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{xs2aUri}}{{statusUrl}}",
+                  "host": [
+                    "{{xs2aUri}}{{statusUrl}}"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "id": "673d6bde-8f3f-4114-adcd-ab0e6e1e85c3",
+                "type": "text/javascript",
+                "exec": [
+                  ""
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "id": "2e2bc43f-6480-45b7-ba76-fedf07d0d2e2",
+                "type": "text/javascript",
+                "exec": [
+                  ""
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {},
+          "_postman_isSubFolder": true
+        },
+        {
+          "name": "Payment bundle + cancellation",
+          "item": [
+            {
+              "name": "[DOMESTIC BUNDLE] Retrieve authorization URI",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "id": "f0048e6c-6e74-4f23-b294-1bcc3b7f6b80",
+                    "exec": [
+                      "var jsonData = JSON.parse(responseBody);",
+                      "postman.setGlobalVariable(\"authorizationRedirectUri\", jsonData.authorizationRedirectUri);"
+                    ],
+                    "type": "text/javascript"
+                  }
+                },
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "id": "ef806a2a-ba73-4982-bd18-cecf75e1f091",
+                    "exec": [
+                      "var now = require('moment');",
+                      "var uuid = require('uuid');",
+                      "",
+                      "pm.globals.set(\"executionDate\", now().format(\"YYYY-MM-DD\"));",
+                      "var nextDay = (Date.now() + 86400000);",
+                      "pm.globals.set(\"scopeTimeLimit\", new Date(nextDay).toISOString());",
+                      "pm.globals.set(\"tppConsentId\", uuid.v4());",
+                      "pm.globals.set(\"state\", require('uuid').v4());",
+                      "eval(pm.variables.get(\"jwsInternalScript\"));",
+                      "calculateDetachedJwsSignature(pm.environment.get(\"tppJwsPrivateKey\"), pm.environment.get(\"tppJwsCertUrl\"), pm.environment.get(\"tppJwsCertFingerprint\"), request);"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json; charset=utf-8"
+                  },
+                  {
+                    "key": "Accept-Encoding",
+                    "value": "gzip, deflate"
+                  },
+                  {
+                    "key": "Accept-Language",
+                    "value": "en-US"
+                  },
+                  {
+                    "key": "JWS-Signature",
+                    "value": "{{jwsSignature}}"
+                  },
+                  {
+                    "key": "TPP-Request-ID",
+                    "value": "{{tppRequestId}}"
+                  },
+                  {
+                    "key": "PSU-User-Agent",
+                    "value": "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:47.0) Gecko/20100101 Firefox/47.0 Mozilla/5.0 (Macintosh; Intel Mac OS X x.y; rv:42.0) Gecko/20100101 Firefox/42.0."
+                  },
+                  {
+                    "key": "PSU-IP-Address",
+                    "value": "193.41.230.87"
+                  },
+                  {
+                    "key": "PSU-IP-Port",
+                    "value": "23456"
+                  },
+                  {
+                    "key": "TPP-ID",
+                    "value": "{{tppId}}",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"response_type\": \"code\",\n    \"client_id\": \"{{clientId}}\",\n    \"redirect_uri\": \"https://tpp-redirect-uri.com\",\n    \"scope\": \"pis\",\n    \"state\": \"{{state}}\",\n    \"scope_details\": {\n        \"privilegeList\": [\n            {\n                \"pis:bundle-domestic\": {\n                    \"bundleDomesticPaymentsRequest\": {\n                        \"transfersTotalAmount\": \"0.03\",\n                        \"transfers\": [\n                            {\n                                \"tppPaymentId\": \"341126ea-77d8-11e9-968a-27f355b781a4\",\n                                \"recipient\": {\n                                    \"accountNumber\": \"{{recipientAccountNumber}}\",\n                                    \"name\": \"Jan Kowalski\"\n                                },\n                                \"sender\": {},\n                                \"transferData\": {\n                                    \"description\": \"Transfer\",\n                                    \"amount\": \"0.01\",\n                                    \"currency\": \"{{currency}}\"\n                                },\n                                \"deliveryMode\": \"STANDARD_D1\"\n                            },\n                            {\n                                \"tppPaymentId\": \"3863ac7c-77d8-11e9-95c7-2b8b94df59b3\",\n                                \"recipient\": {\n                                    \"accountNumber\": \"{{recipientAccountNumber_2}}\",\n                                    \"name\": \"Natalia Kołodziej\"\n                                },\n                                \"sender\": {},\n                                \"transferData\": {\n                                    \"description\": \"Transfer\",\n                                    \"amount\": \"0.02\",\n                                    \"currency\": \"{{currency}}\"\n                                },\n                                \"deliveryMode\": \"STANDARD_D1\"\n                            }\n                        ]\n                    }\n                }\n            }\n        ],\n        \"scopeGroupType\": \"PIS\",\n        \"consentId\": \"{{tppConsentId}}\",\n        \"scopeTimeLimit\": \"{{scopeTimeLimit}}\",\n        \"throttlingPolicy\": \"PSD2_REGULATORY\"\n    }\n}"
+                },
+                "url": {
+                  "raw": "{{xs2aUri}}/{{bankId}}/v2/auth/authorize",
+                  "host": [
+                    "{{xs2aUri}}"
+                  ],
+                  "path": [
+                    "{{bankId}}",
+                    "v2",
+                    "auth",
+                    "authorize"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "[DOMESTIC BUNDLE] Retrieve accessToken for bundle payments inititation",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "id": "866c9a0a-293d-4f80-bced-6787808500c0",
+                    "exec": [
+                      "var jsonData = JSON.parse(responseBody);",
+                      "postman.setGlobalVariable(\"accessToken\", jsonData.access_token);",
+                      "postman.setGlobalVariable(\"refreshToken\", jsonData.refresh_token);"
+                    ],
+                    "type": "text/javascript"
+                  }
+                },
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "id": "ba87cb75-661d-4e31-9ceb-79eeff559f49",
+                    "exec": [
+                      "eval(pm.variables.get(\"jwsInternalScript\"));",
+                      "calculateDetachedJwsSignature(pm.environment.get(\"tppJwsPrivateKey\"), pm.environment.get(\"tppJwsCertUrl\"), pm.environment.get(\"tppJwsCertFingerprint\"), request);"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json; charset=utf-8"
+                  },
+                  {
+                    "key": "Accept-Encoding",
+                    "value": "gzip, deflate"
+                  },
+                  {
+                    "key": "Accept-Language",
+                    "value": "en-US"
+                  },
+                  {
+                    "key": "JWS-Signature",
+                    "value": "{{jwsSignature}}"
+                  },
+                  {
+                    "key": "TPP-Request-ID",
+                    "value": "{{tppRequestId}}"
+                  },
+                  {
+                    "key": "TPP-ID",
+                    "value": "{{tppId}}",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"client_id\": \"{{clientId}}\",\n    \"code\": \"{{authorizationCode}}\",\n    \"grant_type\": \"authorization_code\",\n    \"redirect_uri\": \"https://tpp-redirect-uri.com\"\n}"
+                },
+                "url": {
+                  "raw": "{{xs2aUri}}/{{bankId}}/v2/auth/token",
+                  "host": [
+                    "{{xs2aUri}}"
+                  ],
+                  "path": [
+                    "{{bankId}}",
+                    "v2",
+                    "auth",
+                    "token"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "[DOMESTIC BUNDLE] Initiate domestic bundle payments",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "id": "137667fd-f4b5-4edf-8e19-f37085e6c561",
+                    "exec": [
+                      "var jsonData = JSON.parse(responseBody);",
+                      "postman.setGlobalVariable(\"statusUrl\", jsonData.links[0].href);",
+                      "",
+                      "var aspspBundleIdRegex = \"([a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12})\"",
+                      "var aspspBundleIdMatches = jsonData.links[0].href.match(aspspBundleIdRegex)",
+                      "postman.setGlobalVariable(\"aspspBundleId\", aspspBundleIdMatches[0]);"
+                    ],
+                    "type": "text/javascript"
+                  }
+                },
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "id": "3ae18a87-fb9d-45f2-9057-2e47d9c7b6cb",
+                    "exec": [
+                      "eval(pm.variables.get(\"jwsInternalScript\"));",
+                      "calculateDetachedJwsSignature(pm.environment.get(\"tppJwsPrivateKey\"), pm.environment.get(\"tppJwsCertUrl\"), pm.environment.get(\"tppJwsCertFingerprint\"), request);"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json; charset=utf-8"
+                  },
+                  {
+                    "key": "Client-ID",
+                    "value": "{{clientId}}"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{accessToken}}"
+                  },
+                  {
+                    "key": "Accept-Encoding",
+                    "value": "gzip, deflate"
+                  },
+                  {
+                    "key": "Accept-Language",
+                    "value": "en-US"
+                  },
+                  {
+                    "key": "JWS-Signature",
+                    "value": "{{jwsSignature}}"
+                  },
+                  {
+                    "key": "TPP-Request-ID",
+                    "value": "{{tppRequestId}}"
+                  },
+                  {
+                    "key": "TPP-Bundle-ID",
+                    "value": "{{tppRequestId}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "TPP-ID",
+                    "value": "{{tppId}}",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"transfersTotalAmount\": \"0.03\",\n    \"transfers\": [\n        {\n            \"tppPaymentId\": \"341126ea-77d8-11e9-968a-27f355b781a4\",\n            \"recipient\": {\n                \"accountNumber\": \"{{recipientAccountNumber}}\",\n                \"name\": \"Jan Kowalski\"\n            },\n            \"sender\": {},\n            \"transferData\": {\n                \"description\": \"Transfer\",\n                \"amount\": \"0.01\",\n                \"currency\": \"{{currency}}\"\n            },\n            \"deliveryMode\": \"STANDARD_D1\"\n        },\n        {\n            \"tppPaymentId\": \"3863ac7c-77d8-11e9-95c7-2b8b94df59b3\",\n            \"recipient\": {\n                \"accountNumber\": \"{{recipientAccountNumber_2}}\",\n                \"name\": \"Natalia Kołodziej\"\n            },\n            \"sender\": {},\n            \"transferData\": {\n                \"description\": \"Transfer\",\n                \"amount\": \"0.02\",\n                \"currency\": \"{{currency}}\"\n            },\n            \"deliveryMode\": \"STANDARD_D1\"\n        }\n    ]\n}"
+                },
+                "url": {
+                  "raw": "{{xs2aUri}}/{{bankId}}/v2/payments/bundle/domestic",
+                  "host": [
+                    "{{xs2aUri}}"
+                  ],
+                  "path": [
+                    "{{bankId}}",
+                    "v2",
+                    "payments",
+                    "bundle",
+                    "domestic"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "[DOMESTIC BUNDLE] Retrieve accessToken for bundle payments status",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "id": "6b4b4a8b-41a8-4e9b-8e7c-32cd6e200872",
+                    "exec": [
+                      "var jsonData = JSON.parse(responseBody);",
+                      "postman.setGlobalVariable(\"accessToken\", jsonData.access_token);",
+                      "postman.setGlobalVariable(\"refreshToken\", jsonData.refresh_token);",
+                      "console.log(jsonData.access_token)"
+                    ],
+                    "type": "text/javascript"
+                  }
+                },
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "id": "827cd582-7a0f-4cf0-b139-60de2f84b9fd",
+                    "exec": [
+                      "eval(pm.variables.get(\"jwsInternalScript\"));",
+                      "calculateDetachedJwsSignature(pm.environment.get(\"tppJwsPrivateKey\"), pm.environment.get(\"tppJwsCertUrl\"), pm.environment.get(\"tppJwsCertFingerprint\"), request);"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json; charset=utf-8"
+                  },
+                  {
+                    "key": "Accept-Encoding",
+                    "value": "gzip, deflate"
+                  },
+                  {
+                    "key": "Accept-Language",
+                    "value": "en-US"
+                  },
+                  {
+                    "key": "JWS-Signature",
+                    "value": "{{jwsSignature}}"
+                  },
+                  {
+                    "key": "TPP-Request-ID",
+                    "value": "{{tppRequestId}}"
+                  },
+                  {
+                    "key": "TPP-ID",
+                    "value": "{{tppId}}",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"refresh_token\": \"{{refreshToken}}\",\n    \"grant_type\": \"refresh_token\"\n}"
+                },
+                "url": {
+                  "raw": "{{xs2aUri}}/{{bankId}}/v2/auth/token",
+                  "host": [
+                    "{{xs2aUri}}"
+                  ],
+                  "path": [
+                    "{{bankId}}",
+                    "v2",
+                    "auth",
+                    "token"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "[DOMESTIC BUNDLE] Retrieve bundle payments status",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "id": "e1253100-e529-4fe7-bb27-a920a772739a",
+                    "exec": [
+                      ""
+                    ],
+                    "type": "text/javascript"
+                  }
+                },
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "id": "a1de2edd-4aaf-4029-aee5-0e2b37b9c8c5",
+                    "exec": [
+                      "eval(pm.variables.get(\"jwsInternalScript\"));",
+                      "calculateDetachedJwsSignature(pm.environment.get(\"tppJwsPrivateKey\"), pm.environment.get(\"tppJwsCertUrl\"), pm.environment.get(\"tppJwsCertFingerprint\"), request);"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Client-ID",
+                    "value": "{{clientId}}"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{accessToken}}"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json; charset=utf-8"
+                  },
+                  {
+                    "key": "Accept-Encoding",
+                    "value": "Gzip, deflate"
+                  },
+                  {
+                    "key": "Accept-Language",
+                    "value": "en"
+                  },
+                  {
+                    "key": "JWS-Signature",
+                    "value": "{{jwsSignature}}"
+                  },
+                  {
+                    "key": "TPP-Request-ID",
+                    "value": "{{tppRequestId}}"
+                  },
+                  {
+                    "key": "TPP-ID",
+                    "value": "{{tppId}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{xs2aUri}}{{statusUrl}}?transactionsIncluded=true",
+                  "host": [
+                    "{{xs2aUri}}{{statusUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "transactionsIncluded",
+                      "value": "true"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "[CANCELLATION] Retrieve authorization URI for bundle payments cancellation",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "id": "d9dbce9d-7b17-4b41-b176-69c286fa3762",
+                    "exec": [
+                      "var jsonData = JSON.parse(responseBody);",
+                      "postman.setGlobalVariable(\"authorizationRedirectUri\", jsonData.authorizationRedirectUri);"
+                    ],
+                    "type": "text/javascript"
+                  }
+                },
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "id": "fe18f8b3-c926-4d73-b39b-baf434c26a04",
+                    "exec": [
+                      "var now = require('moment');",
+                      "var uuid = require('uuid');",
+                      "",
+                      "pm.globals.set(\"executionDate\", now().format(\"YYYY-MM-DD\"));",
+                      "var nextDay = (Date.now() + 86400000);",
+                      "pm.globals.set(\"scopeTimeLimit\", new Date(nextDay).toISOString());",
+                      "pm.globals.set(\"tppConsentId\", uuid.v4());",
+                      "pm.globals.set(\"state\", require('uuid').v4());",
+                      "eval(pm.variables.get(\"jwsInternalScript\"));",
+                      "calculateDetachedJwsSignature(pm.environment.get(\"tppJwsPrivateKey\"), pm.environment.get(\"tppJwsCertUrl\"), pm.environment.get(\"tppJwsCertFingerprint\"), request);"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json; charset=utf-8"
+                  },
+                  {
+                    "key": "Accept-Encoding",
+                    "value": "gzip, deflate"
+                  },
+                  {
+                    "key": "Accept-Language",
+                    "value": "en-US"
+                  },
+                  {
+                    "key": "JWS-Signature",
+                    "value": "{{jwsSignature}}"
+                  },
+                  {
+                    "key": "TPP-Request-ID",
+                    "value": "{{tppRequestId}}"
+                  },
+                  {
+                    "key": "PSU-User-Agent",
+                    "value": "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:47.0) Gecko/20100101 Firefox/47.0 Mozilla/5.0 (Macintosh; Intel Mac OS X x.y; rv:42.0) Gecko/20100101 Firefox/42.0."
+                  },
+                  {
+                    "key": "PSU-IP-Address",
+                    "value": "193.41.230.87"
+                  },
+                  {
+                    "key": "PSU-IP-Port",
+                    "value": "23456"
+                  },
+                  {
+                    "key": "TPP-ID",
+                    "value": "{{tppId}}",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"response_type\": \"code\",\n    \"client_id\": \"{{clientId}}\",\n    \"redirect_uri\": \"https://tpp-redirect-uri.com\",\n    \"scope\": \"pis\",\n    \"state\": \"{{state}}\",\n    \"scope_details\": {\n        \"privilegeList\": [\n            {\n                \"pis:cancelBundlePayments\": {\n                    \"aspspBundleId\": \"{{aspspBundleId}}\"\n                }\n            }\n        ],\n        \"scopeGroupType\": \"PIS\",\n        \"consentId\": \"{{tppConsentId}}\",\n        \"scopeTimeLimit\": \"{{scopeTimeLimit}}\",\n        \"throttlingPolicy\": \"PSD2_REGULATORY\"\n    }\n}"
+                },
+                "url": {
+                  "raw": "{{xs2aUri}}/{{bankId}}/v2/auth/authorize",
+                  "host": [
+                    "{{xs2aUri}}"
+                  ],
+                  "path": [
+                    "{{bankId}}",
+                    "v2",
+                    "auth",
+                    "authorize"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "[CANCELLATION] Retrieve accessToken for bundle payments cancellation",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "id": "802bd7d1-36c0-4be2-9bfd-fb110c98f6dd",
+                    "exec": [
+                      "var jsonData = JSON.parse(responseBody);",
+                      "postman.setGlobalVariable(\"accessTokenForCancellation\", jsonData.access_token);",
+                      "postman.setGlobalVariable(\"refreshTokenForCancellation\", jsonData.refresh_token);"
+                    ],
+                    "type": "text/javascript"
+                  }
+                },
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "id": "290df9c9-07f7-4713-820e-a957aa96b1d7",
+                    "exec": [
+                      "eval(pm.variables.get(\"jwsInternalScript\"));",
+                      "calculateDetachedJwsSignature(pm.environment.get(\"tppJwsPrivateKey\"), pm.environment.get(\"tppJwsCertUrl\"), pm.environment.get(\"tppJwsCertFingerprint\"), request);"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json; charset=utf-8"
+                  },
+                  {
+                    "key": "Accept-Encoding",
+                    "value": "gzip, deflate"
+                  },
+                  {
+                    "key": "Accept-Language",
+                    "value": "en-US"
+                  },
+                  {
+                    "key": "JWS-Signature",
+                    "value": "{{jwsSignature}}"
+                  },
+                  {
+                    "key": "TPP-Request-ID",
+                    "value": "{{tppRequestId}}"
+                  },
+                  {
+                    "key": "TPP-ID",
+                    "value": "{{tppId}}",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"client_id\": \"{{clientId}}\",\n    \"code\": \"{{authorizationCode}}\",\n    \"grant_type\": \"authorization_code\",\n    \"redirect_uri\": \"https://tpp-redirect-uri.com\"\n}"
+                },
+                "url": {
+                  "raw": "{{xs2aUri}}/{{bankId}}/v2/auth/token",
+                  "host": [
+                    "{{xs2aUri}}"
+                  ],
+                  "path": [
+                    "{{bankId}}",
+                    "v2",
+                    "auth",
+                    "token"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "[CANCELLATION] Cancel bundle payments",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "id": "18b26602-7ed9-4d37-b8bc-7a24be3bab08",
+                    "exec": [
+                      "var jsonData = JSON.parse(responseBody);",
+                      "postman.setGlobalVariable(\"statusUrl\", jsonData.links[0].href);"
+                    ],
+                    "type": "text/javascript"
+                  }
+                },
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "id": "7c13574e-74c1-4017-9b16-79bf952a5b70",
+                    "exec": [
+                      "eval(pm.variables.get(\"jwsInternalScript\"));",
+                      "calculateDetachedJwsSignature(pm.environment.get(\"tppJwsPrivateKey\"), pm.environment.get(\"tppJwsCertUrl\"), pm.environment.get(\"tppJwsCertFingerprint\"), request);"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json; charset=utf-8"
+                  },
+                  {
+                    "key": "Client-ID",
+                    "value": "{{clientId}}"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{accessTokenForCancellation}}"
+                  },
+                  {
+                    "key": "Accept-Encoding",
+                    "value": "gzip, deflate"
+                  },
+                  {
+                    "key": "Accept-Language",
+                    "value": "en-US"
+                  },
+                  {
+                    "key": "JWS-Signature",
+                    "value": "{{jwsSignature}}"
+                  },
+                  {
+                    "key": "TPP-Payment-ID",
+                    "value": "test-15-{{tppRequestId}}"
+                  },
+                  {
+                    "key": "TPP-Request-ID",
+                    "value": "{{tppRequestId}}"
+                  },
+                  {
+                    "key": "TPP-ID",
+                    "value": "{{tppId}}",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": ""
+                },
+                "url": {
+                  "raw": "{{xs2aUri}}/{{bankId}}/v2/payments/bundle/domestic/{{aspspBundleId}}",
+                  "host": [
+                    "{{xs2aUri}}"
+                  ],
+                  "path": [
+                    "{{bankId}}",
+                    "v2",
+                    "payments",
+                    "bundle",
+                    "domestic",
+                    "{{aspspBundleId}}"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "[DOMESTIC BUNDLE] Retrieve bundle payments status",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "id": "e1aa8f1f-57f3-48a4-9820-0024076ab31a",
+                    "exec": [
+                      ""
+                    ],
+                    "type": "text/javascript"
+                  }
+                },
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "id": "07641908-5609-4ee5-8c6f-d1599ae2549c",
+                    "exec": [
+                      "eval(pm.variables.get(\"jwsInternalScript\"));",
+                      "calculateDetachedJwsSignature(pm.environment.get(\"tppJwsPrivateKey\"), pm.environment.get(\"tppJwsCertUrl\"), pm.environment.get(\"tppJwsCertFingerprint\"), request);"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Client-ID",
+                    "value": "{{clientId}}"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{accessToken}}"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json; charset=utf-8"
+                  },
+                  {
+                    "key": "Accept-Encoding",
+                    "value": "Gzip, deflate"
+                  },
+                  {
+                    "key": "Accept-Language",
+                    "value": "en"
+                  },
+                  {
+                    "key": "JWS-Signature",
+                    "value": "{{jwsSignature}}"
+                  },
+                  {
+                    "key": "TPP-Request-ID",
+                    "value": "{{tppRequestId}}"
+                  },
+                  {
+                    "key": "TPP-ID",
+                    "value": "{{tppId}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{xs2aUri}}{{statusUrl}}?transactionsIncluded=true",
+                  "host": [
+                    "{{xs2aUri}}{{statusUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "transactionsIncluded",
+                      "value": "true"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            }
+          ],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "id": "072b1e08-792e-4283-a93b-5ba7c3b39165",
+                "type": "text/javascript",
+                "exec": [
+                  ""
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "id": "95645a00-4f23-4642-b12f-d55b579a6444",
+                "type": "text/javascript",
+                "exec": [
+                  ""
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {},
+          "_postman_isSubFolder": true
+        },
+        {
+          "name": "Split payment",
+          "item": [
+            {
+              "name": "[SPLIT PAYMENT] Retrieve authorization URI",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "id": "a5b914e3-332b-4043-af86-bf798befad4b",
+                    "exec": [
+                      "var jsonData = JSON.parse(responseBody);",
+                      "postman.setGlobalVariable(\"authorizationRedirectUri\", jsonData.authorizationRedirectUri);"
+                    ],
+                    "type": "text/javascript"
+                  }
+                },
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "id": "72e275fc-70e6-4afc-9b9f-98125cb703dd",
+                    "exec": [
+                      "var now = require('moment');",
+                      "var uuid = require('uuid');",
+                      "",
+                      "pm.globals.set(\"executionDate\", now().format(\"YYYY-MM-DD\"));",
+                      "var nextDay = (Date.now() + 86400000);",
+                      "pm.globals.set(\"scopeTimeLimit\", new Date(nextDay).toISOString());",
+                      "pm.globals.set(\"tppConsentId\", uuid.v4());",
+                      "",
+                      "pm.globals.set(\"state\", require('uuid').v4());",
+                      "",
+                      "eval(pm.variables.get(\"jwsInternalScript\"));",
+                      "calculateDetachedJwsSignature(pm.environment.get(\"tppJwsPrivateKey\"), pm.environment.get(\"tppJwsCertUrl\"), pm.environment.get(\"tppJwsCertFingerprint\"), request);"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json; charset=utf-8"
+                  },
+                  {
+                    "key": "Accept-Encoding",
+                    "value": "gzip, deflate"
+                  },
+                  {
+                    "key": "Accept-Language",
+                    "value": "en-US"
+                  },
+                  {
+                    "key": "JWS-Signature",
+                    "value": "{{jwsSignature}}"
+                  },
+                  {
+                    "key": "TPP-Request-ID",
+                    "value": "{{tppRequestId}}"
+                  },
+                  {
+                    "key": "PSU-User-Agent",
+                    "value": "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:47.0) Gecko/20100101 Firefox/47.0 Mozilla/5.0 (Macintosh; Intel Mac OS X x.y; rv:42.0) Gecko/20100101 Firefox/42.0."
+                  },
+                  {
+                    "key": "PSU-IP-Address",
+                    "value": "193.41.230.87"
+                  },
+                  {
+                    "key": "PSU-IP-Port",
+                    "value": "23456"
+                  },
+                  {
+                    "key": "Send-Date",
+                    "value": "{{sendDate}}"
+                  },
+                  {
+                    "key": "TPP-ID",
+                    "value": "{{tppId}}"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"response_type\": \"code\",\n  \"client_id\": \"{{clientId}}\",\n  \"redirect_uri\": \"https://tpp-redirect-uri.com\",\n  \"scope\": \"pis\",\n  \"state\": \"{{state}}\",\n  \"scope_details\": {\n    \"privilegeList\": [\n      {\n        \"pis:domestic\": {\n          \"scopeUsageLimit\": \"SINGLE\",\n          \"domesticPaymentRequest\": {\n            \"recipient\": {\n              \"accountNumber\": \"{{recipientAccountNumber}}\",\n              \"name\": \"Jan Kowalski\",\n              \"address\": {\n                \"country\": \"POL\",\n                \"addressLine\": [\n                  \"ul. Uchwały 1\",\n                  \"00-123 Warszawa\"\n                ]\n              }\n            },\n            \"sender\": {\n              \"accountNumber\": \"{{senderAccountNumber}}\",\n              \"name\": \"Adam Nowak\",\n              \"address\": {\n                \"country\": \"POL\",\n                \"addressLine\": [\n                  \"ul. Uchwały 1\",\n                  \"00-123 Warszawa\"\n                ]\n              }\n            },\n            \"transferData\": {\n              \"description\": \"Transfer\",\n              \"amount\": \"0.01\",\n              \"executionDate\": \"{{executionDate}}\",\n              \"currency\": \"{{currency}}\",\n              \"additionalFields\": {\n                \"bicOrSwift\": \"DABAIE2D\",\n                \"reference\": \"dummy-reference\",\n                \"KS\": \"1234\",\n                \"VS\": \"5678\",\n                \"SS\": \"90\"\n              }\n            },\n            \"deliveryMode\": \"STANDARD_D1\",\n            \"system\": \"ELIXIR\",\n            \"hold\": false,\n            \"executionMode\": \"IMMEDIATE\",\n            \"splitPayment\": true,\n              \"transactionInfoSp\": {\n                \"spInvoiceNumber\": \"FVS-01-01-2020-0001\",\n                \"spTaxIdentificationNumber\": \"5512265909\",\n                \"spTaxAmount\": \"0.23\",\n                \"spDescription\": \"Split payment\"\n              }\n          }\n        }\n      }\n    ],\n    \"scopeGroupType\": \"PIS\",\n    \"consentId\": \"{{tppConsentId}}\",\n    \"scopeTimeLimit\": \"{{scopeTimeLimit}}\",\n    \"throttlingPolicy\": \"PSD2_REGULATORY\"\n  }\n}"
+                },
+                "url": {
+                  "raw": "{{xs2aUri}}/{{bankId}}/v2/auth/authorize",
+                  "host": [
+                    "{{xs2aUri}}"
+                  ],
+                  "path": [
+                    "{{bankId}}",
+                    "v2",
+                    "auth",
+                    "authorize"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "[SPLIT PAYMENT] Retrieve accessToken for payment inititation",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "id": "4cb8dfe8-c842-43b6-aa6b-ce886e8bc9e1",
+                    "exec": [
+                      "var jsonData = JSON.parse(responseBody);",
+                      "postman.setGlobalVariable(\"accessToken\", jsonData.access_token);",
+                      "postman.setGlobalVariable(\"refreshToken\", jsonData.refresh_token);"
+                    ],
+                    "type": "text/javascript"
+                  }
+                },
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "id": "767e7ed0-fdb0-4a06-876d-893447056696",
+                    "exec": [
+                      "eval(pm.variables.get(\"jwsInternalScript\"));",
+                      "calculateDetachedJwsSignature(pm.environment.get(\"tppJwsPrivateKey\"), pm.environment.get(\"tppJwsCertUrl\"), pm.environment.get(\"tppJwsCertFingerprint\"), request);"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json; charset=utf-8"
+                  },
+                  {
+                    "key": "Accept-Encoding",
+                    "value": "gzip, deflate"
+                  },
+                  {
+                    "key": "Accept-Language",
+                    "value": "en-US"
+                  },
+                  {
+                    "key": "JWS-Signature",
+                    "value": "{{jwsSignature}}"
+                  },
+                  {
+                    "key": "TPP-ID",
+                    "value": "{{tppId}}"
+                  },
+                  {
+                    "key": "TPP-Request-ID",
+                    "value": "{{tppRequestId}}"
+                  },
+                  {
+                    "key": "Send-Date",
+                    "value": "{{sendDate}}"
+                  },
+                  {
+                    "key": "PSU-User-Agent",
+                    "value": "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:47.0) Gecko/20100101 Firefox/47.0 Mozilla/5.0 (Macintosh; Intel Mac OS X x.y; rv:42.0) Gecko/20100101 Firefox/42.0.",
+                    "type": "text"
+                  },
+                  {
+                    "key": "PSU-IP-Address",
+                    "value": "193.41.230.87",
+                    "type": "text"
+                  },
+                  {
+                    "key": "PSU-IP-Port",
+                    "value": "23456",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"client_id\": \"{{clientId}}\",\n  \"code\": \"{{authorizationCode}}\",\n  \"grant_type\": \"authorization_code\",\n  \"redirect_uri\": \"https://tpp-redirect-uri.com\"\n}"
+                },
+                "url": {
+                  "raw": "{{xs2aUri}}/{{bankId}}/v2/auth/token",
+                  "host": [
+                    "{{xs2aUri}}"
+                  ],
+                  "path": [
+                    "{{bankId}}",
+                    "v2",
+                    "auth",
+                    "token"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "[SPLIT PAYMENT] Initiate domestic payment",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "id": "86e93e72-e16f-4f2e-80a2-1d76f59dbd85",
+                    "exec": [
+                      "var jsonData = JSON.parse(responseBody);",
+                      "postman.setGlobalVariable(\"statusUrl\", jsonData.links[0].href);",
+                      "",
+                      "var aspspPaymentIdRegex = \"([a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12})\"",
+                      "var aspspPaymentIdMatches = jsonData.links[0].href.match(aspspPaymentIdRegex)",
+                      "postman.setGlobalVariable(\"aspspPaymentId\", aspspPaymentIdMatches[0]);"
+                    ],
+                    "type": "text/javascript"
+                  }
+                },
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "id": "a9f5250c-93df-4944-8ce8-ad16ab296c5b",
+                    "exec": [
+                      "eval(pm.variables.get(\"jwsInternalScript\"));",
+                      "calculateDetachedJwsSignature(pm.environment.get(\"tppJwsPrivateKey\"), pm.environment.get(\"tppJwsCertUrl\"), pm.environment.get(\"tppJwsCertFingerprint\"), request);"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json; charset=utf-8"
+                  },
+                  {
+                    "key": "Client-ID",
+                    "value": "{{clientId}}"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{accessToken}}"
+                  },
+                  {
+                    "key": "Accept-Encoding",
+                    "value": "gzip, deflate"
+                  },
+                  {
+                    "key": "Accept-Language",
+                    "value": "en-US"
+                  },
+                  {
+                    "key": "JWS-Signature",
+                    "value": "{{jwsSignature}}"
+                  },
+                  {
+                    "key": "TPP-ID",
+                    "value": "{{tppId}}"
+                  },
+                  {
+                    "key": "TPP-Payment-ID",
+                    "value": "{{tppRequestId}}"
+                  },
+                  {
+                    "key": "TPP-Request-ID",
+                    "value": "{{tppRequestId}}"
+                  },
+                  {
+                    "key": "Send-Date",
+                    "value": "{{sendDate}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "PSU-IP-Port",
+                    "value": "23456",
+                    "type": "text"
+                  },
+                  {
+                    "key": "PSU-IP-Address",
+                    "value": "193.41.230.87",
+                    "type": "text"
+                  },
+                  {
+                    "key": "PSU-User-Agent",
+                    "value": "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:47.0) Gecko/20100101 Firefox/47.0 Mozilla/5.0 (Macintosh; Intel Mac OS X x.y; rv:42.0) Gecko/20100101 Firefox/42.0.",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n            \"recipient\": {\n              \"accountNumber\": \"{{recipientAccountNumber}}\",\n              \"name\": \"Jan Kowalski\",\n              \"address\": {\n                \"country\": \"POL\",\n                \"addressLine\": [\n                  \"ul. Uchwały 1\",\n                  \"00-123 Warszawa\"\n                ]\n              }\n            },\n            \"sender\": {\n              \"accountNumber\": \"{{senderAccountNumber}}\",\n              \"name\": \"Adam Nowak\",\n              \"address\": {\n                \"country\": \"POL\",\n                \"addressLine\": [\n                  \"ul. Uchwały 1\",\n                  \"00-123 Warszawa\"\n                ]\n              }\n            },\n            \"transferData\": {\n              \"description\": \"Transfer\",\n              \"amount\": \"0.01\",\n              \"executionDate\": \"{{executionDate}}\",\n              \"currency\": \"{{currency}}\",\n              \"additionalFields\": {\n                \"bicOrSwift\": \"DABAIE2D\",\n                \"reference\": \"dummy-reference\",\n                \"KS\": \"1234\",\n                \"VS\": \"5678\",\n                \"SS\": \"90\"\n              }\n            },\n            \"deliveryMode\": \"STANDARD_D1\",\n            \"system\": \"ELIXIR\",\n            \"hold\": false,\n            \"executionMode\": \"IMMEDIATE\",\n            \"splitPayment\": true,\n              \"transactionInfoSp\": {\n                \"spInvoiceNumber\": \"FVS-01-01-2020-0001\",\n                \"spTaxIdentificationNumber\": \"5512265909\",\n                \"spTaxAmount\": \"0.23\",\n                \"spDescription\": \"Split payment\"\n              }\n          }"
+                },
+                "url": {
+                  "raw": "{{xs2aUri}}/{{bankId}}/v2/payments/domestic",
+                  "host": [
+                    "{{xs2aUri}}"
+                  ],
+                  "path": [
+                    "{{bankId}}",
+                    "v2",
+                    "payments",
+                    "domestic"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "[SPLIT PAYMENT] Retrieve accessToken for payment status",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "id": "b673f99a-c170-4584-88b9-5ef81eb0611f",
+                    "exec": [
+                      "var jsonData = JSON.parse(responseBody);",
+                      "postman.setGlobalVariable(\"accessToken\", jsonData.access_token);",
+                      "postman.setGlobalVariable(\"refreshToken\", jsonData.refresh_token);",
+                      "console.log(jsonData.access_token)"
+                    ],
+                    "type": "text/javascript"
+                  }
+                },
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "id": "0ac66f6b-0dc0-4a1b-887d-76a7ff89ea68",
+                    "exec": [
+                      "eval(pm.variables.get(\"jwsInternalScript\"));",
+                      "calculateDetachedJwsSignature(pm.environment.get(\"tppJwsPrivateKey\"), pm.environment.get(\"tppJwsCertUrl\"), pm.environment.get(\"tppJwsCertFingerprint\"), request);"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json; charset=utf-8"
+                  },
+                  {
+                    "key": "Accept-Encoding",
+                    "value": "gzip, deflate"
+                  },
+                  {
+                    "key": "Accept-Language",
+                    "value": "en-US"
+                  },
+                  {
+                    "key": "JWS-Signature",
+                    "value": "{{jwsSignature}}"
+                  },
+                  {
+                    "key": "TPP-ID",
+                    "value": "{{tppId}}"
+                  },
+                  {
+                    "key": "TPP-Request-ID",
+                    "value": "{{tppRequestId}}"
+                  },
+                  {
+                    "key": "Send-Date",
+                    "value": "{{sendDate}}"
+                  },
+                  {
+                    "key": "PSU-User-Agent",
+                    "value": "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:47.0) Gecko/20100101 Firefox/47.0 Mozilla/5.0 (Macintosh; Intel Mac OS X x.y; rv:42.0) Gecko/20100101 Firefox/42.0."
+                  },
+                  {
+                    "key": "PSU-IP-Address",
+                    "value": "193.41.230.87"
+                  },
+                  {
+                    "key": "PSU-IP-Port",
+                    "value": "23456"
+                  },
+                  {
+                    "key": "PSU-Session",
+                    "value": "true",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"client_id\":\"{{clientId}}\",\n  \"refresh_token\":\"{{refreshToken}}\",\n  \"grant_type\":\"refresh_token\",\n  \"redirect_uri\":\"https://tpp-redirect-uri.com\",\n  \"scope\":\"pis\",\n  \"scope_details\":{\n    \"privilegeList\":[\n      { \n        \"pis:payment\":{\n          \"scopeUsageLimit\": \"MULTIPLE\",\n          \"aspspPaymentId\":\"{{aspspPaymentId}}\"\n        }\n      }\n    ],\n    \"scopeGroupType\":\"PIS\",\n    \"consentId\":\"{{tppConsentId}}\",\n    \"scopeTimeLimit\":\"{{scopeTimeLimit}}\",\n    \"throttlingPolicy\":\"PSD2_REGULATORY\"\n  }\n}"
+                },
+                "url": {
+                  "raw": "{{xs2aUri}}/{{bankId}}/v2/auth/token",
+                  "host": [
+                    "{{xs2aUri}}"
+                  ],
+                  "path": [
+                    "{{bankId}}",
+                    "v2",
+                    "auth",
+                    "token"
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "[SPLIT PAYMENT] Retrieve payment status",
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "id": "8691c5fe-cfdb-4610-992e-bc4184a409f0",
+                    "exec": [
+                      ""
+                    ],
+                    "type": "text/javascript"
+                  }
+                },
+                {
+                  "listen": "prerequest",
+                  "script": {
+                    "id": "8060eda9-667d-4fb3-a052-6b0f1b4d6d2c",
+                    "exec": [
+                      "eval(pm.variables.get(\"jwsInternalScript\"));",
+                      "calculateDetachedJwsSignature(pm.environment.get(\"tppJwsPrivateKey\"), pm.environment.get(\"tppJwsCertUrl\"), pm.environment.get(\"tppJwsCertFingerprint\"), request);"
+                    ],
+                    "type": "text/javascript"
+                  }
+                }
+              ],
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Client-ID",
+                    "value": "{{clientId}}"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{accessToken}}"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json; charset=utf-8"
+                  },
+                  {
+                    "key": "Accept-Encoding",
+                    "value": "Gzip, deflate"
+                  },
+                  {
+                    "key": "Accept-Language",
+                    "value": "en"
+                  },
+                  {
+                    "key": "JWS-Signature",
+                    "value": "{{jwsSignature}}"
+                  },
+                  {
+                    "key": "TPP-ID",
+                    "value": "{{tppId}}"
+                  },
+                  {
+                    "key": "TPP-Request-ID",
+                    "value": "{{tppRequestId}}"
+                  },
+                  {
+                    "key": "Send-Date",
+                    "value": "{{sendDate}}"
+                  },
+                  {
+                    "key": "PSU-User-Agent",
+                    "value": "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:47.0) Gecko/20100101 Firefox/47.0 Mozilla/5.0 (Macintosh; Intel Mac OS X x.y; rv:42.0) Gecko/20100101 Firefox/42.0."
+                  },
+                  {
+                    "key": "PSU-IP-Address",
+                    "value": "193.41.230.87"
+                  },
+                  {
+                    "key": "PSU-IP-Port",
+                    "value": "23456"
+                  },
+                  {
+                    "key": "PSU-Session",
+                    "value": "true",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{xs2aUri}}{{statusUrl}}",
+                  "host": [
+                    "{{xs2aUri}}{{statusUrl}}"
+                  ]
+                }
+              },
+              "response": []
+            }
+          ],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "id": "18f181fa-2b9b-47c1-81b1-1cd9739ced09",
+                "type": "text/javascript",
+                "exec": [
+                  ""
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "id": "eef52b5c-004d-40d3-b181-7e8ee18fa3f2",
+                "type": "text/javascript",
+                "exec": [
+                  ""
+                ]
+              }
+            }
+          ],
+          "protocolProfileBehavior": {},
+          "_postman_isSubFolder": true
+        }
+      ],
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "id": "bc12d518-5370-4a97-aa1e-776bcd05cca1",
+            "type": "text/javascript",
+            "exec": [
+              ""
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "id": "2da4bae5-dd09-40e3-955c-e1dcb5611aaa",
+            "type": "text/javascript",
+            "exec": [
+              ""
+            ]
+          }
+        }
+      ],
+      "protocolProfileBehavior": {}
+    },
+    {
+      "name": "AIS",
+      "item": [
+        {
+          "name": "Retrieve authorization URI",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "1da83534-c544-4f62-a199-5400133a978a",
+                "exec": [
+                  "var jsonData = JSON.parse(responseBody);",
+                  "postman.setGlobalVariable(\"authorizationRedirectUri\", jsonData.authorizationRedirectUri);",
+                  ""
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "id": "3512b8ee-956b-4cd1-8c08-98c6c364facc",
+                "exec": [
+                  "var now = require('moment');",
+                  "var uuid = require('uuid');",
+                  "",
+                  "pm.globals.set(\"executionDate\", now().format(\"YYYY-MM-DD\"));",
+                  "var nextDay = (Date.now() + 86400000);",
+                  "pm.globals.set(\"scopeTimeLimit\", new Date(nextDay).toISOString());",
+                  "pm.globals.set(\"tppConsentId\", uuid.v4());",
+                  "",
+                  "pm.globals.set(\"state\", require('uuid').v4());",
+                  "",
+                  "eval(pm.variables.get(\"jwsInternalScript\"));",
+                  "calculateDetachedJwsSignature(pm.environment.get(\"tppJwsPrivateKey\"), pm.environment.get(\"tppJwsCertUrl\"), pm.environment.get(\"tppJwsCertFingerprint\"), request);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json; charset=utf-8"
+              },
+              {
+                "key": "Accept-Encoding",
+                "value": "Gzip, deflate"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "en"
+              },
+              {
+                "key": "JWS-Signature",
+                "value": "{{jwsSignature}}"
+              },
+              {
+                "key": "TPP-Request-ID",
+                "value": "{{tppRequestId}}"
+              },
+              {
+                "key": "PSU-User-Agent",
+                "value": "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:47.0) Gecko/20100101 Firefox/47.0 Mozilla/5.0 (Macintosh; Intel Mac OS X x.y; rv:42.0) Gecko/20100101 Firefox/42.0."
+              },
+              {
+                "key": "PSU-IP-Address",
+                "value": "193.41.230.87"
+              },
+              {
+                "key": "PSU-IP-Port",
+                "value": "23456"
+              },
+              {
+                "key": "TPP-ID",
+                "value": "{{tppId}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"response_type\": \"code\",\n    \"client_id\": \"{{clientId}}\",\n    \"redirect_uri\": \"https://tpp-redirect-uri.com\",\n    \"scope\": \"ais-accounts\",\n    \"state\": \"{{state}}\",\n    \"scope_details\": {\n        \"privilegeList\": [\n            {\n                \"ais-accounts:accounts\": {}\n            }\n        ],\n        \"scopeGroupType\": \"AIS_ACCOUNTS\",\n        \"consentId\": \"{{tppConsentId}}\",\n        \"scopeTimeLimit\": \"{{scopeTimeLimit}}\",\n        \"throttlingPolicy\": \"PSD2_REGULATORY\"\n    }\n}"
+            },
+            "url": {
+              "raw": "{{xs2aUri}}/{{bankId}}/v2/auth/authorize",
+              "host": [
+                "{{xs2aUri}}"
+              ],
+              "path": [
+                "{{bankId}}",
+                "v2",
+                "auth",
+                "authorize"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Retrieve accessToken for account list retrieval",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "65eb32ee-e060-4e6e-b054-bed23ada4e82",
+                "exec": [
+                  "var jsonData = JSON.parse(responseBody)",
+                  "postman.setGlobalVariable(\"accessToken\", jsonData.access_token)",
+                  "postman.setGlobalVariable(\"accountId\", jsonData.scope_details.privilegeList[0].accountId)"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "id": "bd508233-1aae-4eaf-b48a-554d4a11d925",
+                "exec": [
+                  "eval(pm.variables.get(\"jwsInternalScript\"));",
+                  "calculateDetachedJwsSignature(pm.environment.get(\"tppJwsPrivateKey\"), pm.environment.get(\"tppJwsCertUrl\"), pm.environment.get(\"tppJwsCertFingerprint\"), request);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json; charset=utf-8"
+              },
+              {
+                "key": "Accept-Encoding",
+                "value": "Gzip, deflate"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "en"
+              },
+              {
+                "key": "JWS-Signature",
+                "value": "{{jwsSignature}}"
+              },
+              {
+                "key": "TPP-Request-ID",
+                "value": "{{tppRequestId}}"
+              },
+              {
+                "key": "TPP-ID",
+                "value": "{{tppId}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"client_id\": \"{{clientId}}\",\n    \"code\": \"{{authorizationCode}}\",\n    \"grant_type\": \"authorization_code\",\n    \"redirect_uri\": \"https://tpp-redirect-uri.com\"\n}"
+            },
+            "url": {
+              "raw": "{{xs2aUri}}/{{bankId}}/v2/auth/token",
+              "host": [
+                "{{xs2aUri}}"
+              ],
+              "path": [
+                "{{bankId}}",
+                "v2",
+                "auth",
+                "token"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get account list",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "id": "6f583334-688d-4c22-89ed-ad52d4306062",
+                "exec": [
+                  "eval(pm.variables.get(\"jwsInternalScript\"));",
+                  "calculateDetachedJwsSignature(pm.environment.get(\"tppJwsPrivateKey\"), pm.environment.get(\"tppJwsCertUrl\"), pm.environment.get(\"tppJwsCertFingerprint\"), request);"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "id": "be1defff-c01c-47bf-9e07-7b977f5372c5",
+                "exec": [
+                  "var jsonData = JSON.parse(responseBody);",
+                  "postman.setGlobalVariable(\"accountNumber\", jsonData.accounts[0].accountNumber);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Client-ID",
+                "value": "{{clientId}}"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json; charset=utf-8"
+              },
+              {
+                "key": "Accept-Encoding",
+                "value": "Gzip, deflate"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "en"
+              },
+              {
+                "key": "JWS-Signature",
+                "value": "{{jwsSignature}}"
+              },
+              {
+                "key": "TPP-Request-ID",
+                "value": "{{tppRequestId}}"
+              },
+              {
+                "key": "TPP-ID",
+                "value": "{{tppId}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{xs2aUri}}/{{bankId}}/v2/accounts",
+              "host": [
+                "{{xs2aUri}}"
+              ],
+              "path": [
+                "{{bankId}}",
+                "v2",
+                "accounts"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Exchange token to AIS scope",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "c57db197-c353-4771-ab1f-9c077f8a2eab",
+                "exec": [
+                  "var jsonData = JSON.parse(responseBody)",
+                  "postman.setGlobalVariable(\"accessToken\", jsonData.access_token)",
+                  "postman.setGlobalVariable(\"refreshToken\", jsonData.refresh_token)",
+                  "postman.setGlobalVariable(\"accountId\", jsonData.scope_details.privilegeList[0].accountId)"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "id": "cf3fd78d-62ff-441b-ba79-48c29bf56c1b",
+                "exec": [
+                  "eval(pm.variables.get(\"jwsInternalScript\"));",
+                  "calculateDetachedJwsSignature(pm.environment.get(\"tppJwsPrivateKey\"), pm.environment.get(\"tppJwsCertUrl\"), pm.environment.get(\"tppJwsCertFingerprint\"), request);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json; charset=utf-8"
+              },
+              {
+                "key": "Accept-Encoding",
+                "value": "Gzip, deflate"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "en"
+              },
+              {
+                "key": "JWS-Signature",
+                "value": "{{jwsSignature}}"
+              },
+              {
+                "key": "TPP-Request-ID",
+                "value": "{{tppRequestId}}"
+              },
+              {
+                "key": "TPP-ID",
+                "value": "{{tppId}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"exchange_token\": \"{{accessToken}}\",\n    \"grant_type\": \"exchange_token\",\n    \"scope\": \"ais\",\n    \"scope_details\": {\n        \"privilegeList\": [\n            {\n                \"accountNumber\": \"{{accountNumber}}\",\n                \"ais:accountDetails\": {},\n                \"ais:transactions\": {\n                    \"maxAllowedHistoryLong\": 1,\n                    \"transactionStatus\": [\n                        \"DONE\"\n                    ]\n                },\n                \"ais:transactionDetails\": {}\n            }\n        ],\n        \"scopeGroupType\": \"AIS\",\n        \"consentId\": \"{{tppConsentId}}\",\n        \"scopeTimeLimit\": \"{{scopeTimeLimit}}\",\n        \"throttlingPolicy\": \"PSD2_REGULATORY\"\n    }\n}"
+            },
+            "url": {
+              "raw": "{{xs2aUri}}/{{bankId}}/v2/auth/token",
+              "host": [
+                "{{xs2aUri}}"
+              ],
+              "path": [
+                "{{bankId}}",
+                "v2",
+                "auth",
+                "token"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get account details",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "id": "5b23f11b-aa4f-4b78-9047-fe6ccf0d1ef7",
+                "exec": [
+                  "eval(pm.variables.get(\"jwsInternalScript\"));",
+                  "calculateDetachedJwsSignature(pm.environment.get(\"tppJwsPrivateKey\"), pm.environment.get(\"tppJwsCertUrl\"), pm.environment.get(\"tppJwsCertFingerprint\"), request);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Client-ID",
+                "value": "{{clientId}}"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json; charset=utf-8"
+              },
+              {
+                "key": "Accept-Encoding",
+                "value": "Gzip, deflate"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "en"
+              },
+              {
+                "key": "JWS-Signature",
+                "value": "{{jwsSignature}}"
+              },
+              {
+                "key": "TPP-Request-ID",
+                "value": "{{tppRequestId}}"
+              },
+              {
+                "key": "TPP-ID",
+                "value": "{{tppId}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{xs2aUri}}/{{bankId}}/v2/accounts/{{accountId}}",
+              "host": [
+                "{{xs2aUri}}"
+              ],
+              "path": [
+                "{{bankId}}",
+                "v2",
+                "accounts",
+                "{{accountId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get transaction details",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "id": "a07516d0-040c-4268-961e-d8dc79c28329",
+                "exec": [
+                  "eval(pm.variables.get(\"jwsInternalScript\"));",
+                  "calculateDetachedJwsSignature(pm.environment.get(\"tppJwsPrivateKey\"), pm.environment.get(\"tppJwsCertUrl\"), pm.environment.get(\"tppJwsCertFingerprint\"), request);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Client-ID",
+                "value": "{{clientId}}"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json; charset=utf-8"
+              },
+              {
+                "key": "Accept-Encoding",
+                "value": "Gzip, deflate"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "en"
+              },
+              {
+                "key": "JWS-Signature",
+                "value": "{{jwsSignature}}"
+              },
+              {
+                "key": "TPP-Request-ID",
+                "value": "{{tppRequestId}}"
+              },
+              {
+                "key": "TPP-ID",
+                "value": "{{tppId}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{xs2aUri}}/{{bankId}}/v2/accounts/{{accountId}}/transactions/{{aspspTransactionId}}",
+              "host": [
+                "{{xs2aUri}}"
+              ],
+              "path": [
+                "{{bankId}}",
+                "v2",
+                "accounts",
+                "{{accountId}}",
+                "transactions",
+                "{{aspspTransactionId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get transaction list",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "id": "71b8a75f-e9f5-476a-a451-be22824b2210",
+                "exec": [
+                  "eval(pm.variables.get(\"jwsInternalScript\"));",
+                  "calculateDetachedJwsSignature(pm.environment.get(\"tppJwsPrivateKey\"), pm.environment.get(\"tppJwsCertUrl\"), pm.environment.get(\"tppJwsCertFingerprint\"), request);"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "id": "3451f0c8-d8d3-427c-8ec3-a6325a8076ae",
+                "exec": [
+                  ""
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Client-ID",
+                "value": "{{clientId}}"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json; charset=utf-8"
+              },
+              {
+                "key": "Accept-Encoding",
+                "value": "Gzip, deflate"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "en"
+              },
+              {
+                "key": "JWS-Signature",
+                "value": "{{jwsSignature}}"
+              },
+              {
+                "key": "TPP-Request-ID",
+                "value": "{{tppRequestId}}"
+              },
+              {
+                "key": "TPP-ID",
+                "value": "{{tppId}}"
+              }
+            ],
+            "url": {
+              "raw": "{{xs2aUri}}/{{bankId}}/v2/accounts/{{accountId}}/transactions?transactionStatus=DONE",
+              "host": [
+                "{{xs2aUri}}"
+              ],
+              "path": [
+                "{{bankId}}",
+                "v2",
+                "accounts",
+                "{{accountId}}",
+                "transactions"
+              ],
+              "query": [
+                {
+                  "key": "transactionStatus",
+                  "value": "DONE"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete consent",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "id": "26e6f5da-d5f4-4576-b497-b8e50baf573e",
+                "exec": [
+                  "eval(pm.variables.get(\"jwsInternalScript\"));",
+                  "calculateDetachedJwsSignature(pm.environment.get(\"tppJwsPrivateKey\"), pm.environment.get(\"tppJwsCertUrl\"), pm.environment.get(\"tppJwsCertFingerprint\"), request);"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "id": "3881c78c-1fab-4d92-992f-1cb3856f8794",
+                "exec": [
+                  ""
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json; charset=utf-8"
+              },
+              {
+                "key": "Accept-Encoding",
+                "value": "Gzip, deflate"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "en"
+              },
+              {
+                "key": "JWS-Signature",
+                "value": "{{jwsSignature}}"
+              },
+              {
+                "key": "TPP-Request-ID",
+                "value": "{{tppRequestId}}"
+              },
+              {
+                "key": "Client-ID",
+                "value": "{{clientId}}"
+              },
+              {
+                "key": "TPP-ID",
+                "value": "{{tppId}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": ""
+            },
+            "url": {
+              "raw": "{{xs2aUri}}/{{bankId}}/v2/consents/{{tppConsentId}}",
+              "host": [
+                "{{xs2aUri}}"
+              ],
+              "path": [
+                "{{bankId}}",
+                "v2",
+                "consents",
+                "{{tppConsentId}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "id": "29a31e15-c20d-483a-8ffa-493b1befb4b4",
+            "type": "text/javascript",
+            "exec": [
+              ""
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "id": "e5b2b93c-f354-47bd-99a0-bfbcf625c627",
+            "type": "text/javascript",
+            "exec": [
+              ""
+            ]
+          }
+        }
+      ],
+      "protocolProfileBehavior": {}
+    },
+    {
+      "name": "CAF",
+      "item": [
+        {
+          "name": "Confirmation of the Availability of Funds",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "id": "e524e882-ce36-43d5-b9eb-7713ba3573e8",
+                "exec": [
+                  "eval(pm.variables.get(\"jwsInternalScript\"));",
+                  "calculateDetachedJwsSignature(pm.environment.get(\"tppJwsPrivateKey\"), pm.environment.get(\"tppJwsCertUrl\"), pm.environment.get(\"tppJwsCertFingerprint\"), request);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "Client-ID",
+                "value": "{{clientId}}"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json; charset=utf-8"
+              },
+              {
+                "key": "Accept-Encoding",
+                "value": "Gzip, deflate"
+              },
+              {
+                "key": "Accept-Language",
+                "value": "en"
+              },
+              {
+                "key": "JWS-Signature",
+                "value": "{{jwsSignature}}"
+              },
+              {
+                "key": "TPP-Request-ID",
+                "value": "{{tppRequestId}}"
+              },
+              {
+                "key": "TPP-ID",
+                "value": "{{tppId}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"accountNumber\": \"{{senderAccountNumber}}\",\n    \"amount\": \"100.00\",\n    \"currency\": \"{{currency}}\"\n}"
+            },
+            "url": {
+              "raw": "{{xs2aUri}}/{{bankId}}/v2/funds-confirmation",
+              "host": [
+                "{{xs2aUri}}"
+              ],
+              "path": [
+                "{{bankId}}",
+                "v2",
+                "funds-confirmation"
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "description": "[Pozytywny] Weryfikacja dostępności środków na koncie tylko z wymagalnymi headerami i polami\na. TPP odpytuje XS2A o dostępność środków (request posiada tylko wymagane pola i headery)\nb. Oczekiwany rezultat: informacja o dostępności żądanej kwoty na zadanym numerze konta",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "id": "c85e0bbe-6e99-4242-a49e-5e745bce7e15",
+            "type": "text/javascript",
+            "exec": [
+              ""
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "id": "21ed12ff-574f-44fc-96cd-ad1a2f483655",
+            "type": "text/javascript",
+            "exec": [
+              ""
+            ]
+          }
+        }
+      ],
+      "protocolProfileBehavior": {}
+    },
+    {
+      "name": "AS",
+      "item": [
+        {
+          "name": "[REGISTER] Register an app using jwks keys",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "id": "f018057b-b559-47c6-b3c8-4a3cebac2e52",
+                "exec": [
+                  "eval(pm.variables.get(\"jwsInternalScript\"));",
+                  "eval(pm.variables.get(\"uuidLibrary\"));",
+                  "",
+                  "pm.globals.set(\"tppRequestId\", uuidV1());",
+                  "",
+                  "",
+                  "var payload = \"{\\n\"",
+                  "            + \"  \\\"iss\\\": \\\"{{tppId}}\\\",\\n\"",
+                  "            + \"  \\\"jwks\\\": {\\n\"",
+                  "            + \"    \\\"keys\\\": [\\n\"",
+                  "            + \"      {\\n\"",
+                  "            + \"        \\\"kty\\\": \\\"RSA\\\",\\n\"",
+                  "            + \"        \\\"alg\\\": \\\"RS256\\\",\\n\"",
+                  "            + \"        \\\"x5u\\\": \\\"{{tppJwsCertUrl}}\\\",\\n\"",
+                  "            + \"        \\\"x5t#S256\\\": \\\"{{tppJwsCertFingerprint}}\\\"\\n\"",
+                  "            + \"      }\\n\"",
+                  "            + \"    ]\\n\"",
+                  "            + \"  },\\n\"",
+                  "            + \"  \\\"client_name\\\": \\\"My application\\\",\\n\"",
+                  "            + \"  \\\"sub_contact_email\\\": \\\"my_email@mbank.pl\\\",\\n\"",
+                  "            + \"  \\\"redirect_uris\\\": [\\n\"",
+                  "            + \"    \\\"https://tpp-redirect-uri.com\\\"\\n\"",
+                  "            + \"  ]\\n\"",
+                  "            + \"}\";",
+                  "",
+                  "var filledPayload = collectionFunctions.fillBodyTemplate(payload, pm.variables);",
+                  "",
+                  "var header = { \"alg\": \"RS256\", \"typ\": \"JWT\"};",
+                  "var jwsSignature = collectionFunctions.calculateJwsSignature(pm.environment.get(\"tppJwsPrivateKey\"), header, filledPayload);",
+                  "",
+                  "pm.globals.set(\"software_statement\", jwsSignature);",
+                  ""
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "id": "81d69ca1-e5ea-4648-a7a1-877b4e492856",
+                "exec": [
+                  ""
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "type": "text",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept-Language",
+                "type": "text",
+                "value": "en-US"
+              },
+              {
+                "key": "TPP-Request-ID",
+                "type": "text",
+                "value": "{{tppRequestId}}"
+              },
+              {
+                "key": "",
+                "type": "text",
+                "value": "",
+                "disabled": true
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"software_statement\": \"{{software_statement}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{xs2aUri}}/v2/register/",
+              "host": [
+                "{{xs2aUri}}"
+              ],
+              "path": [
+                "v2",
+                "register",
+                ""
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "id": "748d2787-3030-4ccb-81c4-a88b652e1f69",
+            "type": "text/javascript",
+            "exec": [
+              "collectionFunctions = {",
+              "    calculateJwsSignatureWithCertUrl: function (privateKey, certFileUrl, certFingerprint, certKid, request) {",
+              "        var header = { \"alg\": \"RS256\", \"typ\": \"JWT\", \"x5u\": certFileUrl, \"x5t#S256\": certFingerprint, \"kid\": certKid };",
+              "        var jwsSignature = collectionFunctions.calculateJwsSignature(privateKey, header, request);",
+              "        return collectionFunctions.convertToDetachedJwsSignature(jwsSignature);",
+              "    },",
+              "",
+              "    calculateJwsSignature: function (privateKey, jwtHeader, request) {",
+              "        var navigator = {};",
+              "        var window = {};",
+              "        eval(pm.environment.get(\"jwsLibrary\"));",
+              "        return KJUR.jws.JWS.sign(jwtHeader.alg, JSON.stringify(jwtHeader), request, privateKey);",
+              "    },",
+              "",
+              "    convertToDetachedJwsSignature: function (jwsSignature) {",
+              "        var jwsSignatureParts = jwsSignature.split(\".\");",
+              "        var detachedJwsSignature = jwsSignatureParts[0] + \"..\" + jwsSignatureParts[2];",
+              "        return detachedJwsSignature;",
+              "    },",
+              "",
+              "    fillBodyTemplate: function (requestToUpdate, variables) {",
+              "        var elementsToReplace = requestToUpdate.match(/{{.+}}/g);",
+              "",
+              "        var updatedRequest = requestToUpdate;",
+              "        elementsToReplace.forEach(function (entry) {",
+              "            var variableName = entry.replace(\"{{\", \"\").replace(\"}}\", \"\");",
+              "            updatedRequest = updatedRequest.replace(entry, variables.get(variableName));",
+              "        });",
+              "        return updatedRequest;",
+              "    }",
+              "}"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "id": "1a709bd9-57b0-42fe-8584-485b83dc170c",
+            "type": "text/javascript",
+            "exec": [
+              ""
+            ]
+          }
+        }
+      ],
+      "protocolProfileBehavior": {}
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "id": "3fc24a32-5869-4bcc-9c37-38bc1eef1a3b",
+        "type": "text/javascript",
+        "exec": [
+          "pm.globals.set(\"sendDate\", new Date().toISOString());",
+          "eval(pm.variables.get(\"uuidLibrary\"));",
+          "pm.globals.set(\"tppRequestId\", uuidV1());"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "id": "0f1c2e41-31bd-46ae-b3be-e6aac4f00236",
+        "type": "text/javascript",
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
+  "protocolProfileBehavior": {}
+}
