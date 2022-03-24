@@ -32,10 +32,10 @@ Collection, after small configurations, allows you to create a basic PIS, AIS an
 ## Creating requests
 
 For more details on how to test our mBank PSD2 Sandbox, please visit the website: 
-https://developer.api.mbank.pl/documentation/sandbox
+https://developer.api.mbank.pl/documentation/sandbox-v2
 
 To see the full description of our mBank PSD2 API please refer to the following website:
-https://developer.api.mbank.pl/documentation/api
+https://developer.api.mbank.pl/documentation/api-v2
 
 ### PIS
 
